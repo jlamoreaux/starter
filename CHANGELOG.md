@@ -1,0 +1,14 @@
+# 1.0.0 (2026-01-01)
+
+
+### Bug Fixes
+
+* correct repository URL in package.json ([5e02425](https://github.com/jlamoreaux/starter/commit/5e024253dab5bd7c484d4ecb247494ce9693d6ff))
+* skip husky commit-msg in CI ([16e6039](https://github.com/jlamoreaux/starter/commit/16e6039cab1c71061a0061db761bf844d5b8848e))
+* skip husky pre-commit in CI ([a34d71f](https://github.com/jlamoreaux/starter/commit/a34d71f55d4431d97e7cf57356419ef43412341e))
+* suppress complexity warning for CLI main function ([51ab71a](https://github.com/jlamoreaux/starter/commit/51ab71ae17b08f5dbf4d58ebc1a76714a04eba5f))
+
+
+### Features
+
+* initial starter kit CLI ([7bbbea8](https://github.com/jlamoreaux/starter/commit/7bbbea82ea63a40178f2374f7dd51cf4f0c1baed))

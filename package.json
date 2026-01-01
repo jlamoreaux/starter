@@ -1,13 +1,16 @@
 {
   "name": "@jlmx/starter",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Scaffold new projects with jlmx's preferred stack",
   "type": "module",
   "bin": {
     "starter": "./dist/index.js",
     "@jlmx/starter": "./dist/index.js"
   },
-  "files": ["dist", "templates"],
+  "files": [
+    "dist",
+    "templates"
+  ],
   "scripts": {
     "build": "bun build ./src/index.ts --outdir ./dist --target node",
     "dev": "bun run ./src/index.ts",
