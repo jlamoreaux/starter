@@ -9,7 +9,7 @@
   },
   "files": ["dist", "templates"],
   "scripts": {
-    "build": "bun build ./src/index.ts --outdir ./dist --target node",
+    "build": "bun build ./src/index.ts --outdir ./dist --target bun --packages external",
     "dev": "bun run ./src/index.ts",
     "lint": "biome check .",
     "lint:fix": "biome check --write .",
