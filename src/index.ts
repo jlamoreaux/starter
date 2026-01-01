@@ -226,6 +226,7 @@ Cloudflare Bindings:
   queues          Message queues
 `;
 
+// biome-ignore lint/complexity/noExcessiveCognitiveComplexity: CLI entry point
 async function main() {
   const args = process.argv.slice(2);
 
