@@ -1,3 +1,11 @@
+## [1.1.2](https://github.com/jlamoreaux/starter/compare/v1.1.1...v1.1.2) (2026-01-01)
+
+
+### Bug Fixes
+
+* format package.json ([c770f3e](https://github.com/jlamoreaux/starter/commit/c770f3e1d9647876a8a2b7fd00ed02c4da05a110))
+* use bun target and external packages to fix unicode rendering ([b4fcb94](https://github.com/jlamoreaux/starter/commit/b4fcb94e2705c8293be7e3b0caf60c951ae4485a))
+
 ## [1.1.1](https://github.com/jlamoreaux/starter/compare/v1.1.0...v1.1.1) (2026-01-01)
 
 
