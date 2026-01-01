@@ -1,6 +1,6 @@
 # @jlmx/starter
 
-CLI to scaffold new projects with my preferred stack.
+CLI to scaffold new projects with my preferred stack, optimized for Cloudflare deployment.
 
 ## Usage
 
