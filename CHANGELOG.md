@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/jlamoreaux/starter/compare/v1.1.0...v1.1.1) (2026-01-01)
+
+
+### Bug Fixes
+
+* format package.json ([47e9665](https://github.com/jlamoreaux/starter/commit/47e96656a9700b856e086152feb328ccd8f5ff98))
+
 # [1.1.0](https://github.com/jlamoreaux/starter/compare/v1.0.0...v1.1.0) (2026-01-01)
 
 
