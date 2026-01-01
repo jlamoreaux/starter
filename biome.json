@@ -72,5 +72,13 @@
     "enabled": true,
     "clientKind": "git",
     "useIgnoreFile": true
-  }
+  },
+  "overrides": [
+    {
+      "include": ["package.json"],
+      "formatter": {
+        "enabled": false
+      }
+    }
+  ]
 }
