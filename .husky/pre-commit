@@ -1,1 +1,4 @@
+# Skip in CI (semantic-release handles its own commits)
+[ -n "$CI" ] && exit 0
+
 bun run lint
