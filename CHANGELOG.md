@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/jlamoreaux/starter/compare/v1.0.0...v1.1.0) (2026-01-01)
+
+
+### Features
+
+* add AI coding assistant instructions (AGENTS.md / CLAUDE.md) ([b3cc9fb](https://github.com/jlamoreaux/starter/commit/b3cc9fb5163c3861f30395a017480fc1f4860509))
+
 # 1.0.0 (2026-01-01)
 
 

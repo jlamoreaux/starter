@@ -1,6 +1,6 @@
 {
   "name": "@jlmx/starter",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Scaffold new projects with jlmx's preferred stack",
   "type": "module",
   "bin": {
