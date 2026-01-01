@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { cp, mkdir, readFile, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, symlink, writeFile } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import * as p from "@clack/prompts";
@@ -347,6 +347,40 @@ async function main() {
     }
   }
 
+  // Ask about AI coding assistant instructions
+  const aiInstructions = await p.select({
+    message: "AI coding assistant instructions:",
+    options: [
+      {
+        value: "none",
+        label: "None",
+        hint: "skip AI instructions",
+      },
+      {
+        value: "agents",
+        label: "AGENTS.md",
+        hint: "generic (Codex, Cursor, etc.)",
+      },
+      {
+        value: "claude",
+        label: "CLAUDE.md",
+        hint: "Claude Code specific",
+      },
+      {
+        value: "both",
+        label: "Both",
+        hint: "AGENTS.md + CLAUDE.md symlink",
+      },
+    ],
+  });
+
+  if (p.isCancel(aiInstructions)) {
+    p.cancel("Cancelled");
+    process.exit(0);
+  }
+
+  const selectedAiInstructions = aiInstructions as string;
+
   const projectPath = resolve(process.cwd(), projectName);
   const selectedTemplate = template as string;
 
@@ -692,7 +726,28 @@ ${envVarPrefix}BETTER_AUTH_URL=http://localhost:3000
   await installProcess.exited;
   s.stop("Dependencies installed");
 
-  // Step 4: Initialize git
+  // Step 4: Add AI instructions
+  if (selectedAiInstructions !== "none") {
+    s.start("Adding AI instructions...");
+    const templateDir = join(templatesDir, selectedTemplate);
+
+    if (selectedAiInstructions === "agents" || selectedAiInstructions === "both") {
+      await cp(join(templateDir, "AGENTS.md"), join(projectPath, "AGENTS.md"));
+    }
+
+    if (selectedAiInstructions === "claude") {
+      await cp(join(templateDir, "CLAUDE.md"), join(projectPath, "CLAUDE.md"));
+    }
+
+    if (selectedAiInstructions === "both") {
+      // Create CLAUDE.md as a symlink to AGENTS.md
+      await symlink("AGENTS.md", join(projectPath, "CLAUDE.md"));
+    }
+
+    s.stop("AI instructions added");
+  }
+
+  // Step 5: Initialize git
   s.start("Initializing git...");
 
   const gitProcess = spawn({
