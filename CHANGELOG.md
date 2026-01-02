@@ -1,3 +1,13 @@
+## [1.1.3](https://github.com/jlamoreaux/starter/compare/v1.1.2...v1.1.3) (2026-01-02)
+
+
+### Bug Fixes
+
+* ignore package.json formatting in biome ([0b0445d](https://github.com/jlamoreaux/starter/commit/0b0445d5243c83bb133c82e4464d1e6cc827bdc7))
+* use deploy key for release workflow ([5ab0739](https://github.com/jlamoreaux/starter/commit/5ab0739de1e6b83deba94c035245f903fa310307))
+* use PAT for release workflow to bypass branch protection ([b608977](https://github.com/jlamoreaux/starter/commit/b608977291d2f59c20180a0d658ff4c17e4cce69))
+* use SSH URL for semantic-release ([0bec5c3](https://github.com/jlamoreaux/starter/commit/0bec5c3f65d7fca943e1072ebb42849874f0eccf))
+
 ## [1.1.2](https://github.com/jlamoreaux/starter/compare/v1.1.1...v1.1.2) (2026-01-01)
 
 
