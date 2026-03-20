@@ -239,7 +239,11 @@ function getFlagValue(args: string[], ...flags: string[]): string | undefined {
     if (eqIndex !== -1) return args[eqIndex].slice(flag.length + 1);
 
     const spaceIndex = args.indexOf(flag);
-    if (spaceIndex !== -1 && spaceIndex + 1 < args.length && !args[spaceIndex + 1].startsWith("-")) {
+    if (
+      spaceIndex !== -1 &&
+      spaceIndex + 1 < args.length &&
+      !args[spaceIndex + 1].startsWith("-")
+    ) {
       return args[spaceIndex + 1];
     }
   }
@@ -343,7 +347,9 @@ async function main() {
     const parsed = featuresFlag.split(",").map((f) => f.trim());
     const invalid = parsed.filter((f) => !validFeatures.includes(f));
     if (invalid.length > 0) {
-      p.log.error(`Invalid features: ${invalid.join(", ")}. Choose from: ${validFeatures.join(", ")}`);
+      p.log.error(
+        `Invalid features: ${invalid.join(", ")}. Choose from: ${validFeatures.join(", ")}`
+      );
       process.exit(1);
     }
     selectedFeatures = parsed;
@@ -389,7 +395,9 @@ async function main() {
       const parsed = bindingsFlag === "" ? [] : bindingsFlag.split(",").map((b) => b.trim());
       const invalid = parsed.filter((b) => !validBindings.includes(b));
       if (invalid.length > 0) {
-        p.log.error(`Invalid bindings: ${invalid.join(", ")}. Choose from: ${validBindings.join(", ")}`);
+        p.log.error(
+          `Invalid bindings: ${invalid.join(", ")}. Choose from: ${validBindings.join(", ")}`
+        );
         process.exit(1);
       }
       cfBindings = parsed;

@@ -4,15 +4,43 @@ CLI to scaffold new projects with my preferred stack, optimized for Cloudflare d
 
 ## Usage
 
-```bash
-bunx @jlmx/starter my-app
-```
-
-Or run interactively:
+Interactive mode — prompts for all options:
 
 ```bash
 bunx @jlmx/starter
 ```
+
+Pass a project name to skip the name prompt:
+
+```bash
+bunx @jlmx/starter my-app
+```
+
+One-liner with flags — fully non-interactive:
+
+```bash
+bunx @jlmx/starter my-app --template nextjs --features tailwind,fonts,cloudflare --bindings d1,r2 --ai claude
+```
+
+Accept all defaults with no prompts:
+
+```bash
+bunx @jlmx/starter my-app --yes
+```
+
+## Options
+
+| Flag | Values | Description |
+|------|--------|-------------|
+| `--template` | `tanstack-start`, `nextjs` | Framework template |
+| `--features` | `tailwind,fonts,auth,cloudflare` | Comma-separated feature list |
+| `--bindings` | `d1,r2,kv,ai,queues` | Cloudflare bindings (requires `cloudflare` feature) |
+| `--ai` | `none`, `agents`, `claude`, `both` | AI coding assistant instructions |
+| `-y, --yes` | — | Accept all defaults, skip all prompts |
+| `-h, --help` | — | Show help |
+| `-v, --version` | — | Show version |
+
+Defaults (used with `--yes`): `tanstack-start`, features `tailwind,fonts,cloudflare`, no bindings, no AI instructions.
 
 ## Templates
 
@@ -22,28 +50,28 @@ bunx @jlmx/starter
 ## Features
 
 All projects include:
-- **Tailwind CSS** - Custom design system with `tailwindcss-animate`
-- **Custom Fonts** - Inter + JetBrains Mono via Fontsource
 - **Biome** - Fast linting and formatting (replaces ESLint + Prettier)
 - **Logger** - Structured logging utility
 - **Result Type** - Explicit error handling (neverthrow pattern)
 
 Optional:
+- **Tailwind CSS** - Custom design system with `tailwindcss-animate`
+- **Custom Fonts** - Inter + JetBrains Mono via Fontsource
 - **Authentication** - Better Auth + Drizzle ORM
 - **Cloudflare Workers** - Edge deployment with D1, R2, KV, AI, Queues
 - **AI Instructions** - AGENTS.md and/or CLAUDE.md for coding assistants
 
 ## Cloudflare Bindings
 
-When Cloudflare is selected, you can enable:
+When `cloudflare` is selected, you can enable:
 
 | Binding | Description |
 |---------|-------------|
-| D1 | SQLite database at the edge |
-| R2 | S3-compatible object storage |
-| KV | Key-value storage |
-| AI | Workers AI models |
-| Queues | Message queues |
+| `d1` | SQLite database at the edge |
+| `r2` | S3-compatible object storage |
+| `kv` | Key-value storage |
+| `ai` | Workers AI models |
+| `queues` | Message queues |
 
 ## Development
 
