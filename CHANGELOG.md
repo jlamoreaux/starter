@@ -1,3 +1,10 @@
+## [1.2.1](https://github.com/jlamoreaux/starter/compare/v1.2.0...v1.2.1) (2026-03-20)
+
+
+### Bug Fixes
+
+* only treat first positional arg as project name ([9d11c5a](https://github.com/jlamoreaux/starter/commit/9d11c5a707b35548cb18f2bae25c07629ea81f21)), closes [#5](https://github.com/jlamoreaux/starter/issues/5)
+
 # [1.2.0](https://github.com/jlamoreaux/starter/compare/v1.1.3...v1.2.0) (2026-03-20)
 
 
