@@ -232,24 +232,6 @@ Cloudflare Bindings:
   queues          Message queues
 `;
 
-/** Parse a named flag value: --flag value  or  --flag=value */
-function getFlagValue(args: string[], ...flags: string[]): string | undefined {
-  for (const flag of flags) {
-    const eqIndex = args.findIndex((a) => a.startsWith(`${flag}=`));
-    if (eqIndex !== -1) return args[eqIndex].slice(flag.length + 1);
-
-    const spaceIndex = args.indexOf(flag);
-    if (
-      spaceIndex !== -1 &&
-      spaceIndex + 1 < args.length &&
-      !args[spaceIndex + 1].startsWith("-")
-    ) {
-      return args[spaceIndex + 1];
-    }
-  }
-  return undefined;
-}
-
 // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: CLI entry point
 async function main() {
   const args = process.argv.slice(2);
@@ -900,4 +882,11 @@ ${envVarPrefix}BETTER_AUTH_URL=http://localhost:3000
   ${nextSteps}`);
 }
 
-main().catch(console.error);
+main().catch((err) => {
+  if (err instanceof Error) {
+    console.error(`Error: ${err.message}`);
+  } else {
+    console.error(err);
+  }
+  process.exit(1);
+});
