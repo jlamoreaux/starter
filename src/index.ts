@@ -201,12 +201,18 @@ Usage:
   bunx @jlmx/starter [project-name] [options]
 
 Options:
-  -h, --help     Show this help message
-  -v, --version  Show version number
+  -h, --help                    Show this help message
+  -v, --version                 Show version number
+  -y, --yes                     Accept defaults (no prompts)
+  --template <name>             tanstack-start | nextjs
+  --features <list>             Comma-separated: tailwind,fonts,auth,cloudflare
+  --bindings <list>             Comma-separated: d1,r2,kv,ai,queues
+  --ai <value>                  none | agents | claude | both
 
 Examples:
   bunx @jlmx/starter my-app
-  bunx @jlmx/starter
+  bunx @jlmx/starter my-app --template nextjs --features tailwind,fonts,cloudflare --bindings d1,r2 --ai claude
+  bunx @jlmx/starter my-app --yes
 
 Templates:
   tanstack-start  Full-stack React with TanStack Router
@@ -241,13 +247,24 @@ async function main() {
     process.exit(0);
   }
 
+  // Non-interactive defaults (used with --yes or individual flags)
+  const useDefaults = args.includes("-y") || args.includes("--yes");
+  const DEFAULT_TEMPLATE = "tanstack-start";
+  const DEFAULT_FEATURES = ["tailwind", "fonts", "cloudflare"];
+  const DEFAULT_BINDINGS: string[] = [];
+  const DEFAULT_AI = "none";
+
   console.clear();
   p.intro("@jlmx/starter");
 
-  // Filter out flags to get project name
+  // Project name: positional arg or prompt
   let projectName = args.find((arg) => !arg.startsWith("-"));
 
   if (!projectName) {
+    if (useDefaults) {
+      p.log.error("--yes requires a project name as the first argument");
+      process.exit(1);
+    }
     const nameResult = await p.text({
       message: "Project name:",
       placeholder: "my-app",
@@ -264,44 +281,81 @@ async function main() {
     projectName = nameResult;
   }
 
-  const template = await p.select({
-    message: "Select a template:",
-    options: [
-      {
-        value: "tanstack-start",
-        label: "TanStack Start",
-        hint: "Full-stack React with TanStack Router",
-      },
-      {
-        value: "nextjs",
-        label: "Next.js",
-        hint: "Full-stack React with App Router",
-      },
-    ],
-  });
+  // Template
+  const templateFlag = getFlagValue(args, "--template");
+  const validTemplates = ["tanstack-start", "nextjs"];
 
-  if (p.isCancel(template)) {
-    p.cancel("Cancelled");
-    process.exit(0);
+  let selectedTemplate: string;
+
+  if (templateFlag) {
+    if (!validTemplates.includes(templateFlag)) {
+      p.log.error(`Invalid template "${templateFlag}". Choose: ${validTemplates.join(", ")}`);
+      process.exit(1);
+    }
+    selectedTemplate = templateFlag;
+  } else if (useDefaults) {
+    selectedTemplate = DEFAULT_TEMPLATE;
+  } else {
+    const template = await p.select({
+      message: "Select a template:",
+      options: [
+        {
+          value: "tanstack-start",
+          label: "TanStack Start",
+          hint: "Full-stack React with TanStack Router",
+        },
+        {
+          value: "nextjs",
+          label: "Next.js",
+          hint: "Full-stack React with App Router",
+        },
+      ],
+    });
+
+    if (p.isCancel(template)) {
+      p.cancel("Cancelled");
+      process.exit(0);
+    }
+    selectedTemplate = template as string;
   }
 
-  const features = await p.multiselect({
-    message: "Select features:",
-    options: [
-      { value: "tailwind", label: "Tailwind CSS", hint: "design system + tailwindcss-animate" },
-      { value: "fonts", label: "Custom Fonts", hint: "Inter + JetBrains Mono" },
-      { value: "auth", label: "Authentication", hint: "Better Auth + D1" },
-      { value: "cloudflare", label: "Cloudflare Workers", hint: "deployment config" },
-    ],
-    initialValues: ["tailwind", "fonts", "cloudflare"],
-  });
+  // Features
+  const featuresFlag = getFlagValue(args, "--features");
+  const validFeatures = ["tailwind", "fonts", "auth", "cloudflare"];
 
-  if (p.isCancel(features)) {
-    p.cancel("Cancelled");
-    process.exit(0);
+  let selectedFeatures: string[];
+
+  if (featuresFlag) {
+    const parsed = featuresFlag.split(",").map((f) => f.trim());
+    const invalid = parsed.filter((f) => !validFeatures.includes(f));
+    if (invalid.length > 0) {
+      p.log.error(
+        `Invalid features: ${invalid.join(", ")}. Choose from: ${validFeatures.join(", ")}`
+      );
+      process.exit(1);
+    }
+    selectedFeatures = parsed;
+  } else if (useDefaults) {
+    selectedFeatures = [...DEFAULT_FEATURES];
+  } else {
+    const features = await p.multiselect({
+      message: "Select features:",
+      options: [
+        { value: "tailwind", label: "Tailwind CSS", hint: "design system + tailwindcss-animate" },
+        { value: "fonts", label: "Custom Fonts", hint: "Inter + JetBrains Mono" },
+        { value: "auth", label: "Authentication", hint: "Better Auth + D1" },
+        { value: "cloudflare", label: "Cloudflare Workers", hint: "deployment config" },
+      ],
+      initialValues: ["tailwind", "fonts", "cloudflare"],
+    });
+
+    if (p.isCancel(features)) {
+      p.cancel("Cancelled");
+      process.exit(0);
+    }
+    selectedFeatures = features as string[];
   }
 
-  const selectedFeatures = features as string[];
   let cfBindings: string[] = [];
 
   // Auth requires Cloudflare + D1
@@ -312,33 +366,49 @@ async function main() {
     }
   }
 
-  // Ask about Cloudflare platform features if cloudflare is selected
+  // Cloudflare bindings
   if (selectedFeatures.includes("cloudflare")) {
+    const bindingsFlag = getFlagValue(args, "--bindings");
+    const validBindings = ["d1", "r2", "kv", "ai", "queues"];
     const needsD1 = selectedFeatures.includes("auth");
 
-    const bindings = await p.multiselect({
-      message: "Cloudflare platform features:",
-      options: [
-        {
-          value: "d1",
-          label: "D1 Database",
-          hint: needsD1 ? "required for auth" : "SQLite at the edge",
-        },
-        { value: "r2", label: "R2 Storage", hint: "S3-compatible object storage" },
-        { value: "kv", label: "KV Store", hint: "key-value storage" },
-        { value: "ai", label: "Workers AI", hint: "run AI models" },
-        { value: "queues", label: "Queues", hint: "message queues" },
-      ],
-      initialValues: needsD1 ? ["d1"] : [],
-      required: false,
-    });
+    if (bindingsFlag !== undefined) {
+      // Empty string means no bindings explicitly requested
+      const parsed = bindingsFlag === "" ? [] : bindingsFlag.split(",").map((b) => b.trim());
+      const invalid = parsed.filter((b) => !validBindings.includes(b));
+      if (invalid.length > 0) {
+        p.log.error(
+          `Invalid bindings: ${invalid.join(", ")}. Choose from: ${validBindings.join(", ")}`
+        );
+        process.exit(1);
+      }
+      cfBindings = parsed;
+    } else if (useDefaults) {
+      cfBindings = [...DEFAULT_BINDINGS];
+    } else {
+      const bindings = await p.multiselect({
+        message: "Cloudflare platform features:",
+        options: [
+          {
+            value: "d1",
+            label: "D1 Database",
+            hint: needsD1 ? "required for auth" : "SQLite at the edge",
+          },
+          { value: "r2", label: "R2 Storage", hint: "S3-compatible object storage" },
+          { value: "kv", label: "KV Store", hint: "key-value storage" },
+          { value: "ai", label: "Workers AI", hint: "run AI models" },
+          { value: "queues", label: "Queues", hint: "message queues" },
+        ],
+        initialValues: needsD1 ? ["d1"] : [],
+        required: false,
+      });
 
-    if (p.isCancel(bindings)) {
-      p.cancel("Cancelled");
-      process.exit(0);
+      if (p.isCancel(bindings)) {
+        p.cancel("Cancelled");
+        process.exit(0);
+      }
+      cfBindings = bindings as string[];
     }
-
-    cfBindings = bindings as string[];
 
     // Ensure D1 is included if auth is selected
     if (needsD1 && !cfBindings.includes("d1")) {
@@ -347,42 +417,55 @@ async function main() {
     }
   }
 
-  // Ask about AI coding assistant instructions
-  const aiInstructions = await p.select({
-    message: "AI coding assistant instructions:",
-    options: [
-      {
-        value: "none",
-        label: "None",
-        hint: "skip AI instructions",
-      },
-      {
-        value: "agents",
-        label: "AGENTS.md",
-        hint: "generic (Codex, Cursor, etc.)",
-      },
-      {
-        value: "claude",
-        label: "CLAUDE.md",
-        hint: "Claude Code specific",
-      },
-      {
-        value: "both",
-        label: "Both",
-        hint: "AGENTS.md + CLAUDE.md symlink",
-      },
-    ],
-  });
+  // AI instructions
+  const aiFlag = getFlagValue(args, "--ai");
+  const validAi = ["none", "agents", "claude", "both"];
 
-  if (p.isCancel(aiInstructions)) {
-    p.cancel("Cancelled");
-    process.exit(0);
+  let selectedAiInstructions: string;
+
+  if (aiFlag) {
+    if (!validAi.includes(aiFlag)) {
+      p.log.error(`Invalid --ai value "${aiFlag}". Choose: ${validAi.join(", ")}`);
+      process.exit(1);
+    }
+    selectedAiInstructions = aiFlag;
+  } else if (useDefaults) {
+    selectedAiInstructions = DEFAULT_AI;
+  } else {
+    const aiInstructions = await p.select({
+      message: "AI coding assistant instructions:",
+      options: [
+        {
+          value: "none",
+          label: "None",
+          hint: "skip AI instructions",
+        },
+        {
+          value: "agents",
+          label: "AGENTS.md",
+          hint: "generic (Codex, Cursor, etc.)",
+        },
+        {
+          value: "claude",
+          label: "CLAUDE.md",
+          hint: "Claude Code specific",
+        },
+        {
+          value: "both",
+          label: "Both",
+          hint: "AGENTS.md + CLAUDE.md symlink",
+        },
+      ],
+    });
+
+    if (p.isCancel(aiInstructions)) {
+      p.cancel("Cancelled");
+      process.exit(0);
+    }
+    selectedAiInstructions = aiInstructions as string;
   }
 
-  const selectedAiInstructions = aiInstructions as string;
-
   const projectPath = resolve(process.cwd(), projectName);
-  const selectedTemplate = template as string;
 
   const s = p.spinner();
 
@@ -799,4 +882,11 @@ ${envVarPrefix}BETTER_AUTH_URL=http://localhost:3000
   ${nextSteps}`);
 }
 
-main().catch(console.error);
+main().catch((err) => {
+  if (err instanceof Error) {
+    console.error(`Error: ${err.message}`);
+  } else {
+    console.error(err);
+  }
+  process.exit(1);
+});
