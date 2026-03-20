@@ -1,3 +1,16 @@
+# [1.2.0](https://github.com/jlamoreaux/starter/compare/v1.1.3...v1.2.0) (2026-03-20)
+
+
+### Bug Fixes
+
+* extract and harden arg parsing, add unit tests and ci test job ([d3f601b](https://github.com/jlamoreaux/starter/commit/d3f601beaee1190defb5442cd8953ca5a290ce00))
+* resolve biome formatting violations and update readme with flag docs ([b985cc1](https://github.com/jlamoreaux/starter/commit/b985cc10dd088a2646bc178394cb6649c2898493))
+
+
+### Features
+
+* add non-interactive CLI flags for one-liner installs ([e85e5bf](https://github.com/jlamoreaux/starter/commit/e85e5bf5fca4f08f52eeb3db2bc47461b0009668))
+
 ## [1.1.3](https://github.com/jlamoreaux/starter/compare/v1.1.2...v1.1.3) (2026-01-02)
 
 
