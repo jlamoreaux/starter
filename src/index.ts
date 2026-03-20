@@ -257,8 +257,11 @@ async function main() {
   console.clear();
   p.intro("@jlmx/starter");
 
-  // Project name: positional arg or prompt
-  let projectName = args.find((arg) => !arg.startsWith("-"));
+  // Project name: must be the first argument and non-flag.
+  // args.find() is intentionally avoided — flag values like "nextjs" in
+  // "--template nextjs" must not be mistaken for the project name.
+  const firstArg = args[0];
+  let projectName = firstArg && !firstArg.startsWith("-") ? firstArg : undefined;
 
   if (!projectName) {
     if (useDefaults) {
