@@ -1,3 +1,10 @@
+## [1.2.2](https://github.com/jlamoreaux/starter/compare/v1.2.1...v1.2.2) (2026-03-20)
+
+
+### Bug Fixes
+
+* add missing import of arg parsing module ([ed633e2](https://github.com/jlamoreaux/starter/commit/ed633e2e24c19c2dcf61c87d265a7d084f36ecff)), closes [#5](https://github.com/jlamoreaux/starter/issues/5)
+
 ## [1.2.1](https://github.com/jlamoreaux/starter/compare/v1.2.0...v1.2.1) (2026-03-20)
 
 
