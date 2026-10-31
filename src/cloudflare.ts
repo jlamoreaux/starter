@@ -66,8 +66,8 @@ export function cloudflareScripts(
         }
       : {
           "build:cf": "NITRO_PRESET=cloudflare_module vite build",
-          "preview:cf": "wrangler dev",
-          "deploy:cf": "wrangler deploy",
+          "preview:cf": "bun run build:cf && wrangler dev",
+          "deploy:cf": "bun run build:cf && wrangler deploy",
         };
 
   if (bindings.includes("d1")) {

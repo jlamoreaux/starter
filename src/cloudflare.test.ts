@@ -43,8 +43,8 @@ describe("cloudflareScripts", () => {
   test("TanStack Start builds with nitro's cloudflare_module preset and deploys with wrangler", () => {
     expect(cloudflareScripts("app", [], "tanstack-start")).toEqual({
       "build:cf": "NITRO_PRESET=cloudflare_module vite build",
-      "preview:cf": "wrangler dev",
-      "deploy:cf": "wrangler deploy",
+      "preview:cf": "bun run build:cf && wrangler dev",
+      "deploy:cf": "bun run build:cf && wrangler deploy",
     });
   });
 

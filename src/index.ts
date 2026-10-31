@@ -467,6 +467,8 @@ async function main() {
         "--src-dir",
         "--no-import-alias",
         "--turbopack",
+        // The cooldown install in step 3 must be the first install.
+        "--skip-install",
       ],
       cwd: process.cwd(),
       stdout: "pipe",
@@ -768,6 +770,24 @@ ${envVarPrefix}BETTER_AUTH_URL=http://localhost:3000
     process.exit(1);
   }
   s.stop("Dependencies installed");
+
+  // OpenNext types getCloudflareContext().env from the generated CloudflareEnv interface.
+  if (template === "nextjs" && selectedFeatures.includes("cloudflare")) {
+    s.start("Generating Cloudflare binding types...");
+    const typegen = spawn({
+      cmd: ["bun", "run", "cf-typegen"],
+      cwd: projectPath,
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    await typegen.exited;
+    if (typegen.exitCode === 0) {
+      s.stop("Cloudflare binding types generated");
+    } else {
+      s.stop("Could not generate Cloudflare binding types");
+      p.log.warn("Run `bun run cf-typegen` in the project directory before type checking.");
+    }
+  }
 
   // Step 4: Add AI instructions
   if (selectedAiInstructions !== "none") {
