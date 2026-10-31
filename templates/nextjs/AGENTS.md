@@ -38,13 +38,13 @@ src/
 
 ## Cloudflare Bindings
 
-Access bindings via `getRequestContext()` from `@cloudflare/next-on-pages`:
+Access bindings via `getCloudflareContext()` from `@opennextjs/cloudflare` (run `bun run cf-typegen` after changing `wrangler.toml` to refresh the `CloudflareEnv` types):
 
 ```typescript
-import { getRequestContext } from '@cloudflare/next-on-pages';
+import { getCloudflareContext } from '@opennextjs/cloudflare';
 
 export async function GET() {
-  const { env } = getRequestContext();
+  const { env } = getCloudflareContext();
   const db = env.DB;      // D1 database
   const kv = env.KV;      // KV storage
 }

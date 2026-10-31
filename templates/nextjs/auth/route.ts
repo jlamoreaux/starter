@@ -1,11 +1,10 @@
 // app/api/auth/[...all]/route.ts
 import { createAuth } from "@/lib/auth";
-import { getRequestContext } from "@cloudflare/next-on-pages";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-export const runtime = "edge";
-
+// Runs on the Node.js runtime: OpenNext does not support `runtime = "edge"`.
 async function handler(request: Request) {
-  const { env } = getRequestContext();
+  const { env } = getCloudflareContext();
   const auth = createAuth(env.DB);
   return auth.handler(request);
 }

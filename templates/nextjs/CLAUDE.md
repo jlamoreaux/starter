@@ -34,8 +34,8 @@ bun run deploy       # Deploy to Cloudflare
 
 **Cloudflare bindings**:
 ```typescript
-import { getRequestContext } from '@cloudflare/next-on-pages';
-const { env } = getRequestContext();
+import { getCloudflareContext } from '@opennextjs/cloudflare';
+const { env } = getCloudflareContext();
 const db = env.DB;
 ```
 
