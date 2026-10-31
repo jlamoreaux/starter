@@ -60,7 +60,8 @@
     "ignore": [
       "node_modules",
       ".next",
-      ".vinxi",
+      ".open-next",
+      "**/routeTree.gen.ts",
       ".output",
       "dist",
       "build",

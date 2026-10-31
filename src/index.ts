@@ -5,68 +5,25 @@ import { fileURLToPath } from "node:url";
 import * as p from "@clack/prompts";
 import { spawn } from "bun";
 import { getFlagValue } from "./args";
+import {
+  OPEN_NEXT_CONFIG,
+  type Template,
+  addCloudflareTooling,
+  cloudflareScripts,
+  generateWranglerConfig,
+  withOpenNextDevInit,
+} from "./cloudflare";
+import { describeInstallFailure, installDependencies } from "./install";
+import {
+  CREATE_NEXT_APP_PACKAGE,
+  CREATE_TANSTACK_START_PACKAGE,
+  POSTCSS_SELECTOR_PARSER_OVERRIDE_VERSION,
+} from "./versions";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const templatesDir = join(__dirname, "..", "templates");
 
 const VERSION = "0.1.0";
-
-function generateWranglerConfig(projectName: string, bindings: string[]): string {
-  let config = `name = "${projectName}"
-compatibility_date = "2024-12-30"
-compatibility_flags = ["nodejs_compat"]
-
-[vars]
-ENVIRONMENT = "production"
-`;
-
-  if (bindings.includes("d1")) {
-    config += `
-[[d1_databases]]
-binding = "DB"
-database_name = "${projectName}-db"
-database_id = "<run 'bun run db:create' and paste the ID here>"
-`;
-  }
-
-  if (bindings.includes("kv")) {
-    config += `
-[[kv_namespaces]]
-binding = "KV"
-id = "<run 'wrangler kv:namespace create KV' and paste the ID here>"
-`;
-  }
-
-  if (bindings.includes("r2")) {
-    config += `
-[[r2_buckets]]
-binding = "BUCKET"
-bucket_name = "${projectName}-bucket"
-`;
-  }
-
-  if (bindings.includes("ai")) {
-    config += `
-[ai]
-binding = "AI"
-`;
-  }
-
-  if (bindings.includes("queues")) {
-    config += `
-[[queues.producers]]
-binding = "QUEUE"
-queue = "${projectName}-queue"
-
-[[queues.consumers]]
-queue = "${projectName}-queue"
-max_batch_size = 10
-max_batch_timeout = 5
-`;
-  }
-
-  return config;
-}
 
 function generateSetupInstructions(
   projectName: string,
@@ -134,7 +91,7 @@ The auth tables are already included in \`migrations/0001_auth_tables.sql\`.
 
 1. Create the namespace:
    \`\`\`bash
-   wrangler kv:namespace create KV
+   wrangler kv namespace create KV
    \`\`\`
 
 2. Copy the \`id\` from the output and paste it into \`wrangler.toml\`
@@ -470,6 +427,8 @@ async function main() {
   }
 
   const projectPath = resolve(process.cwd(), projectName);
+  // validTemplates is checked above, so this narrowing is safe.
+  const template = selectedTemplate as Template;
 
   const s = p.spinner();
 
@@ -478,7 +437,7 @@ async function main() {
     s.start("Creating TanStack Start project...");
 
     const proc = spawn({
-      cmd: ["bun", "create", "@tanstack/start@latest", projectName],
+      cmd: ["bunx", CREATE_TANSTACK_START_PACKAGE, projectName],
       cwd: process.cwd(),
       stdout: "pipe",
       stderr: "pipe",
@@ -499,7 +458,7 @@ async function main() {
     const proc = spawn({
       cmd: [
         "bunx",
-        "create-next-app@latest",
+        CREATE_NEXT_APP_PACKAGE,
         projectName,
         "--typescript",
         "--tailwind",
@@ -556,6 +515,17 @@ async function main() {
     ...pkgJson.devDependencies,
     "@biomejs/biome": "^1.9.4",
   };
+
+  if (
+    pkgJson.dependencies?.["@tailwindcss/typography"] ||
+    pkgJson.devDependencies?.["@tailwindcss/typography"]
+  ) {
+    // See POSTCSS_SELECTOR_PARSER_OVERRIDE_VERSION for why and when to drop this.
+    pkgJson.overrides = {
+      ...pkgJson.overrides,
+      "postcss-selector-parser": POSTCSS_SELECTOR_PARSER_OVERRIDE_VERSION,
+    };
+  }
 
   pkgJson.scripts = {
     ...pkgJson.scripts,
@@ -643,8 +613,8 @@ async function main() {
     pkgJson.devDependencies = {
       ...pkgJson.devDependencies,
       "drizzle-kit": "^0.30.0",
-      "@cloudflare/workers-types": "^4.20241230.0",
     };
+    addCloudflareTooling(pkgJson, template);
 
     // Add auth/db scripts
     pkgJson.scripts = {
@@ -654,11 +624,6 @@ async function main() {
       "db:migrate:prod": `wrangler d1 migrations apply ${projectName}-db --remote`,
       "db:studio": "drizzle-kit studio",
     };
-
-    // Next.js on Cloudflare needs @cloudflare/next-on-pages
-    if (selectedTemplate === "nextjs") {
-      pkgJson.devDependencies["@cloudflare/next-on-pages"] = "^1.13.0";
-    }
 
     await writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2));
 
@@ -754,39 +719,18 @@ ${envVarPrefix}BETTER_AUTH_URL=http://localhost:3000
     s.start("Configuring Cloudflare Workers...");
 
     // Generate wrangler.toml with selected bindings
-    const wranglerConfig = generateWranglerConfig(projectName, cfBindings);
+    const wranglerConfig = generateWranglerConfig(projectName, cfBindings, template);
     await writeFile(join(projectPath, "wrangler.toml"), wranglerConfig);
 
     // Update package.json with Cloudflare scripts
     const pkgJsonPath = join(projectPath, "package.json");
     const pkgJson = JSON.parse(await readFile(pkgJsonPath, "utf-8"));
 
-    if (selectedTemplate === "nextjs") {
-      pkgJson.scripts = {
-        ...pkgJson.scripts,
-        "build:cf": "npx @cloudflare/next-on-pages",
-        "preview:cf": "wrangler pages dev .vercel/output/static",
-        "deploy:cf": "wrangler pages deploy .vercel/output/static",
-      };
-    } else {
-      pkgJson.scripts = {
-        ...pkgJson.scripts,
-        "build:cf": "vinxi build --preset cloudflare-pages",
-        "preview:cf": "wrangler pages dev",
-        "deploy:cf": "wrangler pages deploy ./dist",
-      };
-    }
-
-    // Add setup scripts for selected bindings
-    if (cfBindings.includes("d1")) {
-      pkgJson.scripts["db:create"] = `wrangler d1 create ${projectName}-db`;
-      pkgJson.scripts["db:migrate"] = `wrangler d1 migrations apply ${projectName}-db`;
-    }
-
-    pkgJson.devDependencies = {
-      ...pkgJson.devDependencies,
-      wrangler: "^3.99.0",
+    pkgJson.scripts = {
+      ...pkgJson.scripts,
+      ...cloudflareScripts(projectName, cfBindings, template),
     };
+    addCloudflareTooling(pkgJson, template);
 
     await writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2));
 
@@ -800,17 +744,29 @@ ${envVarPrefix}BETTER_AUTH_URL=http://localhost:3000
     s.stop("Cloudflare configured");
   }
 
+  // Next.js reaches Cloudflare bindings through OpenNext (auth uses D1).
+  if (
+    template === "nextjs" &&
+    (selectedFeatures.includes("auth") || selectedFeatures.includes("cloudflare"))
+  ) {
+    await writeFile(join(projectPath, "open-next.config.ts"), OPEN_NEXT_CONFIG);
+    const nextConfigPath = join(projectPath, "next.config.ts");
+    const nextConfig = await readFile(nextConfigPath, "utf-8").catch(() => null);
+    if (nextConfig !== null) {
+      await writeFile(nextConfigPath, withOpenNextDevInit(nextConfig));
+    }
+  }
+
   // Step 3: Install dependencies
   s.start("Installing dependencies...");
 
-  const installProcess = spawn({
-    cmd: ["bun", "install"],
-    cwd: projectPath,
-    stdout: "pipe",
-    stderr: "pipe",
-  });
-
-  await installProcess.exited;
+  const install = await installDependencies(projectPath);
+  if (!install.ok) {
+    s.stop("Dependency install failed");
+    p.log.error(describeInstallFailure(install, selectedTemplate));
+    p.log.info(`The project was created at ${projectPath} but is not installed or committed yet.`);
+    process.exit(1);
+  }
   s.stop("Dependencies installed");
 
   // Step 4: Add AI instructions

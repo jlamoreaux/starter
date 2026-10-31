@@ -262,6 +262,6 @@ export function combineAsync<T extends readonly ResultAsync<unknown, unknown>[]>
 > {
   return new ResultAsync(
     // biome-ignore lint/suspicious/noExplicitAny: complex generic inference
-    Promise.all(results.map((r) => r.promise)).then((resolved) => combine(resolved) as any)
+    Promise.all(results).then((resolved) => combine(resolved) as any)
   );
 }
